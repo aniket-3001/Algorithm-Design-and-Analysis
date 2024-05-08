@@ -1,0 +1,148 @@
+\documentclass{article}
+\usepackage{blindtext}
+\usepackage{geometry}
+    \geometry{
+    a4paper,
+    left=20mm,
+    right=20mm,
+    top=11mm,
+    bottom=18mm,
+    }
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+
+\title{Cut Vertices}
+
+\begin{document}
+
+\maketitle
+\section{Algorithm Description}
+
+
+\subsection{Explanation of Pseudocode}
+The fields in the vertex structure are:
+\begin{itemize}
+    \item \textbf{mark}: boolean
+    \item \textbf{mark as cut vertex}: boolean
+    \item \textbf{position}: integer
+    \item \textbf{inDegree}: integer
+    \item \textbf{outDegree}: integer
+\end{itemize}
+
+Note that the \textbf{inDegree} and \textbf{outDegree} fields are not exactly the in-degree and out-degree of the vertex. They are used to keep track of the in-degree and out-degree of the vertices in the subgraph induced by the vertices with positions between \textbf{start} and \textbf{end}. I am assuming that the graph G is in the form of an adjacency list.
+
+\subsubsection{SpecialDFS(G, v, start, end)}
+\begin{itemize}
+    \item This is a depth-first search (DFS) function modified to work within a specified range of positions (\textbf{start} to \textbf{end}) in the graph.
+    \item It marks a vertex \textit{v} as visited.
+    \item If \textit{v}'s position is within the specified range, it updates the in-degree and out-degree of the vertices and recursively explores unmarked adjacent vertices within the range.
+    \item If \textit{v}'s position is not within the specified range, it only explores unmarked adjacent vertices without updating in-degree and out-degree.
+\end{itemize}
+
+\subsubsection{DFSALL(G, start, end)}
+\begin{itemize}
+    \item This function performs a DFS traversal on all unmarked vertices in the graph within the specified range of positions.
+\end{itemize}
+
+\subsubsection{CutVertices(G, s, t)}
+\begin{itemize}
+    \item This function identifies the cut vertices between vertices \textit{s} and \textit{t}.
+    \item It iterates over the vertices in topological order within the range from \textit{s} to \textit{t}.
+    \item It keeps track of a counter \textit{ctr}, which is increased by the out-degree and decreased by the in-degree of each vertex.
+    \item When \textit{ctr} becomes zero (except for \textit{s} and \textit{t}), it records the vertex as a cut vertex.
+\end{itemize}
+
+\subsubsection{Driver(G, s, t)}
+\begin{itemize}
+    \item This is the main function that initializes vertex positions, in-degrees, and out-degrees using \textbf{Preprocess}.
+    \item It sets up the range (\textbf{start} to \textbf{end}) between vertices \textit{s} and \textit{t}.
+    \item Finally it calls \textit{CutVertices} to find the cut vertices between \textit{s} and \textit{t}
+\end{itemize}
+\subsection{Pseudocode}
+\begin{algorithm}
+\caption{CutVertices}
+\begin{algorithmic}[1]
+\Procedure{SpecialDFS}{$G, v, \text{start}, \text{end}$}
+    \State \textbf{mark} $v$
+    \If {$\text{start} \leq \text{position}(v) \leq \text{end}$}
+        \ForAll {$\text{edges } v \rightarrow w$}
+            \If {$w$ \textbf{is unmarked}}
+                \If {$\text{start} \leq \text{position}(w) \leq \text{end}$}
+                    \State $\text{outDegree}(v) \gets \text{outDegree}(v) + 1, \text{ inDegree}(w) \gets \text{inDegree}(w) + 1$
+                \EndIf
+                \State \textsc{SpecialDFS}($G, w, \text{start}, \text{end}$)
+            \EndIf
+        \EndFor
+    \Else
+        \ForAll {$\text{edges } v \rightarrow w$}
+            \If {$w$ \textbf{is unmarked}}
+                \State \textsc{SpecialDFS}($G, w, \text{start}, \text{end}$)
+            \EndIf
+        \EndFor
+    \EndIf
+\EndProcedure
+\Statex
+\Procedure{DFSALL}{$G, \text{start}, \text{end}$}
+    \ForAll {$\text{vertices } v$}
+        \If {$v$ \textbf{is unmarked}}
+            \State \textsc{SpecialDFS}($G, v, \text{start}, \text{end}$)
+        \EndIf
+    \EndFor
+\EndProcedure
+\Statex
+
+\Procedure{CutVertices}{$G, s, t$}
+    \State $\text{ctr} \gets 0$
+    \ForAll {$\text{vertices } v$ \textbf{in topological order from} $\text{position}(s)$ \textbf{to} $\text{position}(t)$}
+        \State $\text{ctr} \gets \text{ctr} - \text{inDegree}(v)$
+        \If {$(\text{ctr} = 0$ \textbf{and} $v$ \textbf{not in} $\{s, t\})$}
+            \State $\text{mark v as a cut vertex}$
+        \EndIf
+        \State $\text{ctr} \gets \text{ctr} + \text{outDegree}(v)$
+    \EndFor
+\EndProcedure
+\Statex
+
+\Procedure{Preprocess}{$G$}
+    \State Use the standard DFS algorithm to check if there exists a path from $s$ to $t$. If not, return $-1$.
+    \ForAll{$\text{vertices } v$ \textbf{in topological order of} $G$ \textbf{with index} $i$ \textbf{from} $1$ \textbf{to} $|V|$}
+        \State $\text{position}(v) \gets i$, $\text{inDegree}(v) \gets 0$, $\text{outDegree}(v) \gets 0$
+    \EndFor
+    \State \textbf{return} $1$
+\EndProcedure
+\Statex
+
+\Procedure{Driver}{$G, s, t$}
+    \If{\textsc{Preprocess}($G$) $= -1$}
+        \State \textbf{return}
+    \EndIf
+    \State $\text{start} \gets \text{position}(s), \text{ end} \gets \text{position}(t)$
+    \State \textsc{CUTVERTICES}($G, s, t$)
+\EndProcedure
+
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
+
+\subsection{Summary}
+The algorithm works by initializing positions, in-degrees, and out-degrees to the vertices in the graph using topological sort ordering. Then, it runs a DFS on the graph, and computes in-degrees and out-degrees for the vertices which are between the positions of $s$ and $t$. Finally, it iterates over the vertices in the topological order that are between the positions of $s$ and $t$, and checks if the vertex that is currently being iterated over has the value of \textbf{ctr} equal to 0 after we subtract the in-degree of the vertex from \textbf{ctr}. If yes, this vertex is a cut vertex, and we store it in our list containing the (s, t) cut vertices. Following this check, we add the out-degree of the vertex to \textbf{ctr}.
+
+\section{Running Time of the Algorithm}
+Topological sorting takes $O(|V| + |E|)$ time in case of directed graphs since the algorithm stems from the DFS traversal of the graph. The running time of the standard DFS and the DFS done in the \textsc{DFSALL} method is $O(|V| + |E|)$. The worst case running time of the \textsc{CutVertices} method is $O(|V|)$ since all we are doing is iterating over the vertices in the topological order that are between the positions of $s$ and $t$. Thus, combining all the steps, the overall running time of the algorithm is $O(|V| + |E|)$.
+
+
+\section{Correctness of the Algorithm [Intuition]}
+The algorithm works by first performing a topological sort on the graph, and fetching an ordering of the vertices. Each vertex has an in-degree and out-degree associated with it, but only for those edges that are in at least one path between $s$ and $t$. 
+
+Cut vertices are identified over the property that a vertex $v$ is a cut vertex if and only if there exists a path from $s$ to $v$ and from $v$ to $t$, and there exists no incoming edge to any descendant of $v$ on the path that originates from an ancestor of $v$.
+
+The key observation is, by checking for the depletion of our counter $\textbf{ctr}$ (becoming $0$) at each vertex, i.e., the situation where there are no unprocessed incoming edges to any of the descendants of the vertex, the algorithm is able to determine that the current vertex is a cut vertex, and removing it would disconnect $s$ and $t$. In other words, adding outdegrees checks the number of paths emerging from the vertex. Subtracting indegrees is to check the number of paths that do not merge into the current vertex while traveling from $s$ to $t$. If the counter becomes $0$, this implies any active path from $s$ to $t$ merges into the current vertex, and hence, it has to be a cut vertex.
+
+The algorithm also takes care of the cases where there are multiple sources/sinks and the cases where $s$ and $t$ may not be a source and a sink respectively. From the property of topological sort, we know that all the sinks arrive at the very end of the topological ordering, and all the sources arrive at the very beginning. In cases where $s$ and $t$ are any arbitrary vertices (not source/sink), the indegree is computed such that the $\textbf{SpecialDFS}$ method excludes "redundant" vertices from the in-degree and out-degree computation, and so that they are not able to interfere with the cut vertex identification process.
+
+\end{document}

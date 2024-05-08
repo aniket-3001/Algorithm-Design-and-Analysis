@@ -1,0 +1,242 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\usepackage[margin=2.2cm]{geometry}
+
+\title{Theory Assignment-1: ADA Winter-2024}
+\author{Aarav Mathur (2022005) \and Aniket Gupta (2022073)}
+
+\date{28-01-2024}
+\begin{document}
+
+\maketitle
+
+\section{Preprocessing}
+None
+
+\section{Algorithm Description}
+This algorithm is based on a median-of-medians divide and conquer approach. In each iteration of the algorithm, we are essentially able to reduce half the search space of any one of the array. This is done till we reach the base case, where only one array remains, and at that point, we return the (modified) kth element in that remaining array.
+
+\section{Recurrence Relation}
+
+The recurrence relation for the algorithm is given by:
+
+\[
+T(n_1, n_2, n_3) = T\left(\frac{n_i}{2}, n_j, n_k\right) + O(1)
+\]
+
+where \(i, j, k\) can take any permutation of the values \(1, 2, 3\).
+
+
+\section{Complexity Analysis}
+Note that computing the time complexity of the algorithm directly from the above recurrence may prove to be extremely difficult. Hence, we will compute the time complexity for the following simplified version of the recurrence:
+
+\[
+T(n_1, n_2, n_3) = T\left(\frac{n_1}{2}, n_2, n_3\right) + O(1)
+\]
+
+where n_1 = n_2 = n_3 \newline \newline
+
+Hence, our recurrence becomes:
+
+\[
+T(N) = T(\frac{5N}{6}) + O(1) 
+\]
+
+where N = n_1 + n_2 + n_3 \newline
+
+Thus, from the above recurrence relation, we can say that the time complexity of our algorithm is \(O(\log(N))\), since there is a very clear reduction of the search space by a constant factor of \(\frac{1}{6}\) in each iteration.
+
+
+\section{Pseudocode}
+
+\begin{algorithm}
+\caption{Median}
+\begin{algorithmic}[1]
+    \Function{Median}{$arr, low, high$}
+        \State $len \gets high - low + 1$
+        \If{$len = 0$}
+            \State \Return $0$
+        \EndIf
+        \If{$len \mod 2 = 0$}
+            \State \Return $arr[low + \frac{len}{2} - 1]$
+        \Else
+            \State \Return $arr[low + \frac{len}{2}]$
+        \EndIf
+    \EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Eliminate\_right}
+\begin{algorithmic}[1]
+    \Function{Eliminate\_right}{$median, pivot, length, size, counter$}
+        \If{$median > pivot$}
+            \If{$length \mod 2 = 0$}
+                \State $counter \gets counter - \frac{length}{2}$
+                \State $size \gets size - \frac{length}{2}$
+            \Else
+                \State $counter \gets counter - (\frac{length}{2} + 1)$
+                \State $size \gets size - (\frac{length}{2} + 1)$
+            \EndIf
+        \EndIf
+        \State \Return $\langle size, counter \rangle$
+    \EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Eliminate\_left}
+\begin{algorithmic}[1]
+    \Function{Eliminate\_left}{$median, pivot, length, size, counter, k$}
+        \If{$median < pivot$}
+            \If{$length \mod 2 = 0$}
+                \State $counter \gets counter + \frac{length}{2}$
+                \State $size \gets size - \frac{length}{2}$
+                \State $k \gets k - \frac{length}{2}$
+            \Else
+                \State $counter \gets counter + (\frac{length}{2} + 1)$
+                \State $size \gets size - (\frac{length}{2} + 1)$
+                \State $k \gets k - (\frac{length}{2} + 1)$
+            \EndIf
+        \EndIf
+        \State \Return $\langle size, counter, k \rangle$
+    \EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{find\_k}
+\footnotesize
+\begin{algorithmic}[1]
+    \Function{find\_k}{$arr1, arr2, arr3, l1, r1, l2, r2, l3, r3, k, valid1, valid2, valid3$}
+        \State $len1 \gets 0$, $len2 \gets 0$, $len3 \gets 0$, $T \gets 0$, $m1 \gets 0$, $m2 \gets 0$, $m3 \gets 0$
+        \State $M \gets 0.0$
+
+        \If{$valid1$}
+            \State $len1 \gets r1 - l1 + 1$
+            \State $m1 \gets \text{Median}(arr1, l1, r1)$
+        \EndIf
+
+        \If{$valid2$}
+            \State $len2 \gets r2 - l2 + 1$
+            \State $m2 \gets \text{Median}(arr2, l2, r2)$
+        \EndIf
+
+        \If{$valid3$}
+            \State $len3 \gets r3 - l3 + 1$
+            \State $m3 \gets \text{Median}(arr3, l3, r3)$
+        \EndIf
+
+        \State $T \gets len1 + len2 + len3$
+
+        \If{$m1 = 0$ and $m2 = 0$}
+            \State $M \gets m3$
+        \ElsIf{$m2 = 0$ and $m3 = 0$}
+            \State $M \gets m1$
+        \ElsIf{$m1 = 0$ and $m3 = 0$}
+            \State $M \gets m2$
+        \ElsIf{$m1 \times m2 \times m3 = 0$}
+            \State $M \gets \frac{m1 + m2 + m3}{2.0}$
+        \Else
+            \State $arr \gets [m1, m2, m3]$
+            \State $\textbf{Sort}(arr)$
+            \State $M \gets arr[1]$
+        \EndIf
+
+        \If{$k \leq \frac{T}{2}$}
+            \If{$valid1$}
+                \State $\langle T, r1 \rangle \gets \text{Eliminate\_right}(m1, M, len1, T, r1)$
+            \EndIf
+
+            \If{$valid2$}
+                \State $\langle T, r2 \rangle \gets \text{Eliminate\_right}(m2, M, len2, T, r2)$
+            \EndIf
+
+            \If{$valid3$}
+                \State $\langle T, r3 \rangle \gets \text{Eliminate\_right}(m3, M, len3, T, r3)$
+            \EndIf
+        \Else
+            \If{$valid1$}
+                \State $\langle T, l1, k \rangle \gets \text{Eliminate\_left}(m1, M, len1, T, l1, k)$
+            \EndIf
+
+            \If{$valid2$}
+                \State $\langle T, l2, k \rangle \gets \text{Eliminate\_left}(m2, M, len2, T, l2, k)$
+            \EndIf
+
+            \If{$valid3$}
+                \State $\langle T, l3, k \rangle \gets \text{Eliminate\_left}(m3, M, len3, T, l3, k)$
+        \EndIf
+
+        \If{$l1 > r1$}
+            \State $valid1 \gets \textbf{false}$
+        \EndIf
+
+        \If{$l2 > r2$}
+            \State $valid2 \gets \textbf{false}$
+        \EndIf
+
+        \If{$l3 > r3$}
+            \State $valid3 \gets \textbf{false}$
+        \EndIf
+
+        \If{$valid1$ \textbf{and not} $valid2$ \textbf{and not} $valid3$}
+            \State \Return $arr1[l1 + k - 1]$
+        \EndIf
+
+        \If{$valid2$ \textbf{and not} $valid1$ \textbf{and not} $valid3$}
+            \State \Return $arr2[l2 + k - 1]$
+        \EndIf
+
+        \If{$valid3$ \textbf{and not} $valid1$ \textbf{and not} $valid2$}
+            \State \Return $arr3[l3 + k - 1]$
+        \EndIf
+
+        \State \Return $\text{find\_k}(arr1, arr2, arr3, l1, r1, l2, r2, l3, r3, k, valid1, valid2, valid3)$
+    \EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
+\section{Assumptions}
+
+\begin{itemize}
+  \item The indexing is zero-based.
+  \item No two arrays should have any common elements.
+  \item Assume that we have only floor division in the code in case of integers, since the code is derived from cpp.
+\end{itemize}
+
+\section{Proof of Correctness}
+
+In this algorithm we first compute the approximate median of all three arrays individually, followed by computing the median of those three medians. We then make a check, if the kth element is less than half the total number of elements in all three arrays. If it is, then we eliminate the right half of the array with the largest median, else we eliminate the left half of the array with the smallest median and accordingly adjust the value of k too. We then recursively call the function again with the updated values of the arrays and k. We keep doing this until we reach the base case, where we have only one array left. At this point we simply return the kth element of the array. \newline \newline This algorithm might not work in the cases where any two arrays have common elements. This is because, the medians of two or more arrays might come out to be same, and the program might not be able to distinguish the array with the largest, or the array with the smallest median and enter into an infinite recursion call.
+
+\section{References and Collaborations}
+
+During the development and exploration of the algorithms presented in this document, the following references and collaborations were invaluable:
+
+\begin{enumerate}
+    \item \textbf{CS Stack Exchange Discussion:}
+    \begin{quote}
+        Title: \emph{Kth smallest element in 2 sorted arrays} \\
+        Link: \href{https://stackoverflow.com/questions/4607945/how-to-find-the-kth-smallest-element-in-the-union-of-two-sorted-arrays}
+    \end{quote}
+
+    The discussion on CS Stack Exchange provided insights and discussions related to the kth smallest element in 2 sorted arrays.
+
+    \item \textbf{YouTube Video Tutorial:}
+    \begin{quote}
+        Title: \emph{Algorithm Explanation: Find Kth Element in Two Sorted Arrays} \\
+        Link: \href{https://www.youtube.com/watch?v=nv7F4PiLUzo}{https://www.youtube.com/watch?v=nv7F4PiLUzo}
+    \end{quote}
+
+    This video tutorial offered a detailed explanation of the algorithm for finding the kth element in two sorted arrays.
+
+\end{enumerate}
+
+
+\end{document}

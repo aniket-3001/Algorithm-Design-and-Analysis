@@ -1,0 +1,132 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\usepackage[margin=2.2cm]{geometry}
+
+\title{Theory Assignment-3: ADA Winter-2024}
+\author{Aarav Mathur (2022005) \and Aniket Gupta (2022073)}
+\date{19-02-2024}
+
+\begin{document}
+
+\maketitle
+
+\section{Subproblem Definition}
+
+The subproblem of the algorithm is defined as:
+
+\[
+\text{{DP}}\text[i][j]
+\]
+
+where:
+\begin{align*}
+& \text{ i $\in [0,m-1]$ and j $\in [0,n-1]$}  \\
+\end{align*}
+
+\begin{itemize}
+    \item i represents the width of the slab
+    \item j represents the length of the slab
+    \item DP[i][j] refers to the subproblem which returns the maximum possible selling cost achievable for the slab of marble with dimensions i + 1, j + 1
+\end{itemize}
+
+\section{Recurrence of the Subproblem}
+
+The recurrence relation of the algorithm is defined as:
+
+\[
+\text{DP}[i][j] = \max \left\{
+\begin{aligned}
+&P[i][j], \\
+&-{\infty}, && \text{if } i = 0 \text{ }, \\
+&-{\infty}, && \text{if } j = 0 \text{ }, \\
+&\max_{0 \leq k < i/2} \{DP[k][j] + DP[i-k-1][j]\}, && \text{if } i \text{ is even and $i\neq$ 0}, \\
+&\max_{0 \leq k < (i/2) + 1} \{DP[k][j] + DP[i-k-1][j]\}, && \text{if } i \text{ is odd}, \\
+&\max_{0 \leq k < j/2} \{DP[i][k] + DP[i][j-k-1]\}, && \text{if } j \text{ is even and $j\neq$ 0}, \\
+&\max_{0 \leq k < (j/2) + 1} \{DP[i][k] + DP[i][j-k-1]\}, && \text{if } j \text{ is odd}
+\end{aligned}
+\right\}
+\]
+
+
+
+\section{Subproblem(s) that Solves the Actual Problem}
+
+The answer to the actual problem is stored in $\text{DP}[m - 1][n - 1]$, where $m$ and $n$ are the dimensions of the original marble slab. It represents the maximum profit achievable, either by cutting the marble slab into smaller slabs of integral dimensions horizontally/vertically, so that the selling price can be maximized, or by selling the original marble slab as it is.
+
+\newpage
+
+\section{Algorithm Description}
+\subsection{Pseudocode}
+
+\begin{algorithm}
+\caption{MaxSellingPrice}
+\begin{algorithmic}[1]
+\Procedure{MaxSellingPrice}{$P, m, n, DP$}
+    \For{$i \gets 0$ to $m-1$}
+        \For{$j \gets 0$ to $n-1$}
+            \If{$i = 0$ and $j = 0$}
+                \State $DP[i][j] \gets P[i][j]$ \Comment{Base case}
+            \Else
+                \State $\text{max\_horizontal} \gets {-\infty }$
+                \If{$i \mod 2 = 0$} \Comment{if even number of rows}
+                    \For{$k \gets 0$ to $(i/2) - 1$}
+                        \State $sp \gets DP[k][j] + DP[i-k-1][j]$ \Comment{Horizontal cut recurrences}
+                        \State $\text{max\_horizontal} \gets \max(\text{max\_horizontal}, sp)$
+                    \EndFor
+                \Else \Comment{if odd number of rows}
+                    \For{$k \gets 0$ to $(i/2)$}
+                        \State $sp \gets DP[k][j] + DP[i-k-1][j]$ \Comment{Horizontal cut recurrences}
+                        \State $\text{max\_horizontal} \gets \max(\text{max\_horizontal}, sp)$
+                    \EndFor
+                \EndIf
+                \State $\text{max\_vertical} \gets {- \infty }$
+                \If{$j \mod 2 = 0$} \Comment{if even number of columns}
+                    \For{$k \gets 0$ to $(j/2)-1$}
+                        \State $sp \gets DP[i][k] + DP[i][j-k-1]$ \Comment{Vertical cut recurrences}
+                        \State $\text{max\_vertical} \gets \max(\text{max\_vertical}, sp)$
+                    \EndFor
+                \Else \Comment{if odd number of columns}
+                    \For{$k \gets 0$ to $(j/2)$}
+                        \State $sp \gets DP[i][k] + DP[i][j-k-1]$ \Comment{Vertical cut recurrences}
+                        \State $\text{max\_vertical} \gets \max(\text{max\_vertical}, sp)$
+                    \EndFor
+                \EndIf
+                \State $DP[i][j] \gets \max(\text{max\_horizontal}, \text{max\_vertical}, P[i][j])$
+            \EndIf
+        \EndFor
+    \EndFor
+    \State \textbf{return} $DP[m-1][n-1]$ \Comment{Subproblem that solves the original problem}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsection{Explanation}
+\begin{itemize}
+    \item $P$ is a 2D array of dimensions m, n representing the spot prices for different dimensions of marble pieces.
+    \item $m$ and $n$ are the dimensions of the original marble slab.
+    \item $DP$ is a 2D array of dimensions m, n to store the maximum selling price achievable for every possible dimension of the marble slab.
+    \item The base case is when the dimensions of the marble slab are 1x1, in which case the maximum selling price is the spot price of the marble slab, since no cutting is possible.
+    \item The algorithm iterates over every possible dimension of the marble slab and calculates the maximum selling price achievable for that dimension.
+    \item This is done by considering all possible horizontal and vertical cuts and calculating the maximum selling price achievable for each cut, followed by taking the maximum of all these possibilities, and the spot price of the marble slab of the current dimension.
+    \item A small optimisation has been done in the form of the if-else statements to reduce the number of iterations in the loops, which makes use of the commutative property of addition. We wouldn't need to iterate over the entire range of i and j, but only half of it.
+\end{itemize}
+
+\section{Running Time of the Algorithm}
+There are two loops for i and j, i going from 0 to m - 1 and j going from 0 to n - 1. Inside the nested loop for j, we have another two loops one which goes from 0 to i/2 and another which goes from 0 to j/2 (roughly).
+Therefore the worst case time complexity would be mn(m/2 + n/2) which is equal to $O(mn(m + n))$.
+
+\section{Assumptions and Important Points}
+
+\begin{itemize}
+    \item The '/' operator divides and floors the quotient.
+    \item The indexing is 0-based.
+    \item The dynamic programming table $DP$ is a 2D array of size m, n.
+    \item The algorithm assumes that the input dimensions $m$ and $n$ are positive integers.
+\end{itemize}
+
+\end{document}

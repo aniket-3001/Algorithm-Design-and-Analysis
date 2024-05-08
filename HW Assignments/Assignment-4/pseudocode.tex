@@ -1,0 +1,79 @@
+\documentclass{article}
+\usepackage{blindtext}
+\usepackage{geometry}
+    \geometry{
+    a4paper,
+    left=20mm,
+    right=20mm,
+    top=11mm,
+    bottom=18mm,
+    }
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\subsection{Pseudocode}
+\begin{algorithm}
+\caption{CutVertices}
+\begin{algorithmic}[1]
+\Procedure{SpecialDFS}{$G, v, \text{start}, \text{end}$}
+    \State \textbf{mark} $v$
+    \If {$\text{start} \leq \text{position}(v) \leq \text{end}$}
+        \ForAll {$\text{edges } v \rightarrow w$}
+            \If {$w$ \textbf{is unmarked}}
+                \If {$\text{start} \leq \text{position}(w) \leq \text{end}$}
+                    \State $\text{outDegree}(v) \gets \text{outDegree}(v) + 1, \text{ inDegree}(w) \gets \text{inDegree}(w) + 1$
+                \EndIf
+                \State \textsc{SpecialDFS}($G, w, \text{start}, \text{end}$)
+            \EndIf
+        \EndFor
+    \Else
+        \ForAll {$\text{edges } v \rightarrow w$}
+            \If {$w$ \textbf{is unmarked}}
+                \State \textsc{SpecialDFS}($G, w, \text{start}, \text{end}$)
+            \EndIf
+        \EndFor
+    \EndIf
+\EndProcedure
+\Statex
+\Procedure{DFSALL}{$G, \text{start}, \text{end}$}
+    \ForAll {$\text{vertices } v$}
+        \If {$v$ \textbf{is unmarked}}
+            \State \textsc{SpecialDFS}($G, v, \text{start}, \text{end}$)
+        \EndIf
+    \EndFor
+\EndProcedure
+\Statex
+
+\Procedure{CutVertices}{$G, s, t$}
+    \State $\text{ctr} \gets 0$
+    \ForAll {$\text{vertices } v$ \textbf{in topological order from} $\text{position}(s)$ \textbf{to} $\text{position}(t)$}
+        \State $\text{ctr} \gets \text{ctr} - \text{inDegree}(v)$
+        \If {$(\text{ctr} = 0$ \textbf{and} $v$ \textbf{not in} $\{s, t\})$}
+            \State $\text{mark v as a cut vertex}$
+        \EndIf
+        \State $\text{ctr} \gets \text{ctr} + \text{outDegree}(v)$
+    \EndFor
+\EndProcedure
+\Statex
+
+\Procedure{Preprocess}{$G$}
+    \State Use the standard DFS algorithm to check if there exists a path from $s$ to $t$. If not, return $-1$.
+    \ForAll{$\text{vertices } v$ \textbf{in topological order of} $G$ \textbf{with index} $i$ \textbf{from} $1$ \textbf{to} $|V|$}
+        \State $\text{position}(v) \gets i$, $\text{inDegree}(v) \gets 0$, $\text{outDegree}(v) \gets 0$
+    \EndFor
+    \State \textbf{return} $1$
+\EndProcedure
+\Statex
+
+\Procedure{Driver}{$G, s, t$}
+    \If{\textsc{Preprocess}($G$) $= -1$}
+        \State \textbf{return}
+    \EndIf
+    \State $\text{start} \gets \text{position}(s), \text{ end} \gets \text{position}(t)$
+    \State \textsc{CUTVERTICES}($G, s, t$)
+\EndProcedure
+
+\end{algorithmic}
+\end{algorithm}

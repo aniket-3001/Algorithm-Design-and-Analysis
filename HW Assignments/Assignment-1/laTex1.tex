@@ -1,0 +1,142 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\usepackage[margin=2.2cm]{geometry}
+
+\title{Theory Assignment-1: ADA Winter-2024}
+\author{Aarav Mathur (2022005) \and Aniket Gupta (2022073)}
+
+\date{28-01-2024}
+\begin{document}
+
+\maketitle
+
+\section{Preprocessing}
+Proper checks are made in both the functions \texttt{kthElementIn2SortedArrays} and \texttt{kthElementIn3SortedArrays} to ensure that the binary search algorithm is performed on the lesser-sized array to achieve the best possible time complexity.
+
+\section{Algorithm Description}
+This algorithm builds upon a helper function for finding the kth element in two sorted arrays. The core idea is to perform binary search on the smallest array among the three, and essentially reduce the problem to find the kth element in two sorted arrays. \newline \newline \texttt{kthElementIn2SortedArrays} is based upon the concept of making partitioning cuts in both the arrays, in order to obtain a desirable ordering of elements, such that all the elements on the left side of \texttt{cut1} are lesser than all the elements on the right side of \texttt{cut2} and all the elements on the left side of \texttt{cut2} are lesser than all the elements on the right side of \texttt{cut1}; carried out using the concept of binary search. When the above conditions are met, we can simply return the maximum among the elements of \texttt{arr1[cut1 - 1]} and \texttt{arr2[cut2 - 1]}, since both of these are the maximum elements in their respective partitions, and the maximum among them would be the kth smallest element in the union of the three sorted arrays.
+
+\section{Recurrence Relation}
+None
+
+\section{Complexity Analysis}
+Without the loss of generality, let the lengths of the given arrays be $n_1$, $n_2$, and $n_3$, where $n_1 \leq n_2 \leq n_3$. Note that $n_1$, $n_2$, and $n_3$ are not necessarily mapped to \texttt{arr1}, \texttt{arr2}, and \texttt{arr3} as done in the pseudocode; they are just used to express the lengths of the smallest, second-smallest, and the largest arrays. Then, the time complexity of each call to the \texttt{kthElementIn2SortedArrays} function call is $O(\log(n_2))$. Similarly, the binary search in \texttt{kthElementIn3SortedArrays} takes $O(\log(n_1))$ time. \newline \newline
+Thus, the time complexity for the proposed algorithm is $O(\log(n_1) * \log(n_2))$. \newline
+Since we are not using any extra space, the auxiliary space complexity is $O(1)$.
+
+\section{Pseudocode}
+\textbf{Note:} In the following algorithms, \texttt{-infinity} and \texttt{+infinity} represent the minimum and maximum values of the datatype used in the code, respectively.
+\begin{algorithm}
+\caption{Kth Element in Two Sorted Arrays}
+\begin{algorithmic}[1]
+    \Function{kthElementIn2SortedArrays}{$arr1, arr2, m, n, k$}
+        \If{$n < m$}
+            \State \Return \Call{kthElementIn2SortedArrays}{$arr2, arr1, n, m, k$}
+        \EndIf
+        
+        \State $low \gets \max(0, k - n)$
+        \State $high \gets \min(k, m)$
+
+        \While{$low \leq high$}
+            \State $cut1 \gets \left\lfloor\frac{low + high}{2}\right\rfloor$
+            \State $cut2 \gets k - cut1$
+
+            \State $left1 \gets$ \textbf{if} $cut1 = 0$ \textbf{then} $\text{-infinity}$ \textbf{else} $arr1[cut1 - 1]$
+            \State $left2 \gets$ \textbf{if} $cut2 = 0$ \textbf{then} $\text{-infinity}$ \textbf{else} $arr2[cut2 - 1]$
+            
+            \State $right1 \gets$ \textbf{if} $cut1 = n$ \textbf{then} $\text{+infinity}$ \textbf{else} $arr1[cut1]$
+            \State $right2 \gets$ \textbf{if} $cut2 = m$ \textbf{then} $\text{+infinity}$ \textbf{else} $arr2[cut2]$
+
+            \If{$left1 \leq right2$ \textbf{and} $left2 \leq right1$}
+                \State \Return $\langle \max(left1, left2), \min(right1, right2) \rangle$ \Comment{return a pair of elements}
+            \ElsIf{$left1 > right2$}
+                \State $high \gets cut1 - 1$
+            \Else
+                \State $low \gets cut1 + 1$
+            \EndIf
+        \EndWhile
+
+        \State \Return $\langle \rangle$ \Comment{there is no kth element}
+    \EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Kth Element in Three Sorted Arrays}
+\begin{algorithmic}[1]
+    \Function{kthElementIn3SortedArrays}{$arr1, arr2, arr3, n1, n2, n3, k$}
+        \If{$n2 \leq n1$ \textbf{and} $n2 \leq n3$}
+            \State \Return \Call{kthElementIn3SortedArrays}{$arr2, arr1, arr3, n2, n1, n3, k$}
+        \EndIf
+
+        \If{$n3 \leq n1$ \textbf{and} $n3 \leq n2$}
+            \State \Return \Call{kthElementIn3SortedArrays}{$arr3, arr1, arr2, n3, n1, n2, k$}
+        \EndIf
+
+        \State $low \gets \max(0, k - (n2 + n3))$
+        \State $high \gets \min(k, n1)$
+
+        \While{$low \leq high$}
+            \State $cut1 \gets \left\lfloor\frac{low + high}{2}\right\rfloor$
+            \State $cut2 \gets k - cut1$
+
+            \State $left1 \gets$ \textbf{if} $cut1 = 0$ \textbf{then} $\text{-infinity}$ \textbf{else} $arr1[cut1 - 1]$
+            \State $right1 \gets$ \textbf{if} $cut1 = n1$ \textbf{then} $\text{+infinity}$ \textbf{else} $arr1[cut1]$
+
+            \State $\langle left2, right2 \rangle \gets$ \Call{kthElementIn2SortedArrays}{$arr2, arr3, n2, n3, cut2$} \Comment{Capture pair}
+
+            \If{$left1 \leq right2$ \textbf{and} $left2 \leq right1$}
+                \State \Return $\max(left1, left2)$
+            \ElsIf{$left1 > right2$}
+                \State $high \gets cut1 - 1$
+            \Else
+                \State $low \gets cut1 + 1$
+            \EndIf
+        \EndWhile
+
+        \State \Return $-1$ \Comment{there is no kth element}
+    \EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
+\section{Assumptions}
+
+\begin{itemize}
+  \item The indexing is zero-based.
+\end{itemize}
+
+\section{Proof of Correctness}
+
+This algorithm uses binary search on the shortest array among the three to find a cutting point \texttt{cut1} which partitions the smallest array in two parts, and \texttt{cut2 = k - cut1} is used for determining the partitions for the remaining two arrays. \newline \newline The algorithm ensures that the elements at the cutting point (\texttt{left1, right1, left2, right2}) are compared correctly so that only well-formed cuts are made. If the conditions are violated, the search space is narrowed down by updating the limits \texttt{low} and \texttt{high} such that the correct range is considered in the subsequent iterations. \newline \newline Edge cases are also appropriately handled so that the algorithm does not attempt to access elements outside the valid range. \newline \newline In essence, this algorithm can be thought of as the efficient version of a linear search algorithm, which traverses the two shortest arrays in a nested loop, looking for the desired partition so that we can obtain the \(k\)-th smallest element from the union of the three arrays. \newline \newline The algorithm terminates when the correct cutting points are found. The existence of one and only one correct cutting point is guaranteed as long as the inputs are valid, and thus, this algorithm always works.
+
+\section{References and Collaborations}
+
+During the development and exploration of the algorithms presented in this document, the following references and collaborations were invaluable:
+
+\begin{enumerate}
+    \item \textbf{CS Stack Exchange Discussion:}
+    \begin{quote}
+        Title: \emph{Kth smallest element in N sorted arrays} \\
+        Link: \href{https://cs.stackexchange.com/questions/152771/kth-smallest-element-in-n-sorted-arrays?newreg=d0f1980a43e64b8cb2b51bf9b084780c}{https://cs.stackexchange.com/questions/152771/kth-smallest-element-in-n-sorted-arrays}
+    \end{quote}
+
+    The discussion on CS Stack Exchange provided insights and discussions related to the kth smallest element in N sorted arrays. 
+
+    \item \textbf{YouTube Video Tutorial:}
+    \begin{quote}
+        Title: \emph{Algorithm Explanation: Find Kth Element in Two Sorted Arrays} \\
+        Link: \href{https://www.youtube.com/watch?v=nv7F4PiLUzo}{https://www.youtube.com/watch?v=nv7F4PiLUzo}
+    \end{quote}
+
+    This video tutorial offered a detailed explanation of the algorithm for finding the kth element in two sorted arrays.
+
+\end{enumerate}
+
+
+\end{document}

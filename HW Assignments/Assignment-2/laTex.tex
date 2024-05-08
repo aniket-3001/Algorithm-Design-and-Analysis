@@ -1,0 +1,137 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\usepackage[margin=2.2cm]{geometry}
+
+\title{Theory Assignment-2: ADA Winter-2024}
+\author{Aarav Mathur (2022005) \and Aniket Gupta (2022073)}
+\date{11-02-2024}
+
+\begin{document}
+
+\maketitle
+
+\section{Subproblem Definition}
+
+The subproblem of the algorithm is defined as:
+
+\[
+\text{{DP}}\text[i][ring][ding]
+\]
+
+where:
+\begin{align*}
+& i \in [0, n - 1] and \text{ ring, ding} \in \{0,1, 2, 3\} \\
+\end{align*}
+
+\begin{itemize}
+    \item i represents the current index of the DP array
+    \item ring is the "ring" count of the problem and ding is the "ding" count of the problem
+    \item DP[i][ring][ding] refers to the subproblem which returns the maximum possible chickens Mr. Fox can win, if he starts from the ith index, with his last 3 counts are given in the form of ring and ding
+\end{itemize}
+
+\section{Recurrence of the Subproblem}
+
+The recurrence relation of the algorithm is defined as (where $i \in [0, n - 1]$ and $\text{ring, ding} \in \{0,1, 2, 3\}$):
+
+\[
+\text{DP}[i][\text{ring}][\text{ding}] = \begin{cases} 
+\text{abs}(A[i]) & \text{if } i = 0 \\
+A[i] & \text{if } i = 0 \text{ and } \text{ding} = 3 \\
+-A[i] & \text{if } i = 0 \text{ and } \text{ring} = 3 \\
+-A[i] + \text{DP}[i - 1][0][1] & \text{if } i \neq 0  \text{ and } \text{ring} = 3  \\
+A[i] + \text{DP}[i - 1][1][0] & \text{if } i \neq 0  \text{ and } \text{ding} = 3  \\
+\max \left( A[i] + \text{DP}[i - 1][\text{ring} + 1][0], -A[i] + \text{DP}[i - 1][0][\text{ding} + 1] \right) & \text{otherwise}
+\end{cases}
+\]
+
+\section{Subproblem(s) that Solves the Actual Problem}
+
+The answer to the actual problem is stored inside $\text{DP}[n - 1][0][0] $ (i = n - 1, ring = 0, ding = 0). It just refers to the problem in which Mr. Fox starts from the (n - 1)th index, i.e the end of the phone booth array, and reaches the 0th index. He starts off with ring and ding counts set to 0.
+
+\newpage
+
+\section{Algorithm Description}
+
+\subsection{Pseudocode}
+\begin{algorithm}
+\caption{MAXCHICKS}
+\begin{algorithmic}[1]
+\Procedure{MAXCHICKS}{$A$, $ring$, $ding$, $n$, $DP$}
+    \For{$i \gets 0$ to $n-1$}
+        \If{$i = 0$}
+            \For{$j \gets 0$ to $3$} \Comment{j represents ring}
+                \For{$k \gets 0$ to $3$} \Comment{k represents ding}
+                    \If{$j = 3$} \Comment{3 consecutive ring's}
+                        \State $DP[i][j][k] \gets -A[i]$
+                    \ElsIf{$k = 3$} \Comment{3 consecutive ding's}
+                        \State $DP[i][j][k] \gets A[i]$
+                    \Else
+                        \State $DP[i][j][k] \gets \lvert A[i] \rvert$ \Comment{Take absolute value}
+                    \EndIf
+                \EndFor
+            \EndFor
+        \Else
+            \For{$j \gets 0$ to $3$} \Comment{j represents ring}
+                \For{$k \gets 0$ to $3$} \Comment{k represents ding}
+                    \If{$k = 3$} \Comment{3 consecutive ding's}
+                        \State $DP[i][j][k] \gets A[i] + DP[i - 1][1][0]$
+                    \ElsIf{$j = 3$} \Comment{3 consecutive ring's}
+                        \State $DP[i][j][k] \gets -A[i] + DP[i - 1][0][1]$
+                    \Else
+                        \State $DP[i][j][k] \gets \max(A[i] + DP[i - 1][j + 1][0], -A[i] + DP[i - 1][0][k + 1])$
+                    \EndIf
+                \EndFor
+            \EndFor
+        \EndIf
+    \EndFor
+\endProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Explanation}
+\begin{itemize}
+
+\item A is the array containing the phone booths, it has length n.
+
+\item DP is our dynamic programming table, which is a 3d array, having indices corresponding to i, ring and ding, where ring and ding represent the ring count and ding count respectively.
+
+\item Both the counts have a maximum limit 3, and minimum limit 0. Whenever Mr. Fox says either ring or ding, the count of the other resets to zero. Reason being that Mr. Fox can is allowed to say it 3 times in a row now.
+
+\item This is a standard tabulation algorithm which makes use of a 3-d DP array. We start off by addressing the base case of the memoised solution, which in tabulation is simply converted to the condition "if (i == 0)" in the provided approach. If that is the case, we simply fix the desired value of A[i] (the current index in the iteration of A[i]) in the respective A[i][j][k]. In case of j = 3 (3 consecutive ring's) Mr. Fox needs to say ding this time, so we store -A[i]. The case of k = 3 is symmetric. But if ($j \neq 3$) and ($k \neq 3$), we simply store the absolute value, since Mr. Fox is allowed to say both, ring/ding.
+
+\item The else part contains the recursive body of the code. Again, if k = 3, Mr. Fox has said 3 consecutive ding's, and thus, he is only allowed to say ring this time. So, we simply store the result A[i] + DP[i - 1][1][0] (note that DP[i - 1][1][0] represents the recursive call with index i - 1) inside our dp table. The case for j = 3 is symmetric. In the else part, Mr. Fox has said neither 3 consecutive ding's, nor 3 consecutive ring's, so we simply need to store the maximum of the two.
+
+\end{itemize}
+
+\section{Running Time of the Algorithm}
+\begin{itemize}
+
+\item $DP$ is a 3D vector which takes $O(n \times 4 \times 4)$ time for its creation inside the main function.
+
+\item Inside the $\text{MaxChicks}$ function, it can be observed that every iteration for $n$ has 16 nested iterations:
+    \begin{itemize}
+        \item In the \textbf{if} $i == 0$ condition, there are 2 nested \textbf{for} loops of size 4 each, thus $4 \times 4 = 16$ iterations.
+        \item In iterations other than $i == 0$, there are again 2 nested \textbf{for} loops of size 4 each, thus $4 \times 4 = 16$ iterations.
+    \end{itemize}
+
+\item Hence, we can conclude that the worst-case time complexity of our algorithm is $O(16n + 16n) = O(n)$.
+
+\end{itemize}
+
+\section{Assumptions}
+\begin{itemize}
+    \item Indexing is 0 based.
+
+    \item $\text{DP}[n - 1][0][0]$ is willingly not returned. It can be accessed inside the main function itself where the DP array is declared. Please make sure to pass the DP table in the $\text{MAXCHICKS}$ function by reference.
+    \item Please take note that I have tried to explain the algorithm in accordance with its memoisation solution, the reason being that tabulation is unintuitive and is pretty hard to explain, since it is a copy of the memoisation approach with the recursions being converted to for loops. In order to write the tabulation, one needs to come up with the more intuitive recursive approach, convert it to a memoised solution, and finally come up with a tabulated solution.
+
+    \item Whenever a previous iteration of the DP table is accessed, it refers to what would have been a recursion call in the memoised solution.
+
+    \item My solution is drafted in the reverse order of what the problem statement states, and Mr. Fox, is starting off from the last phone booth and ends at the first phone booth. Please note that this would not lead to any changes in the final answer.
+\end{itemize}
+
+\end{document}

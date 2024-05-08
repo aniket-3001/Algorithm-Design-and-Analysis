@@ -1,0 +1,74 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[margin=2.2cm]{geometry}
+
+\title{Theory Assignment-5: ADA Winter-2024}
+\author{Aarav Mathur (2022005) \and Aniket Gupta (2022073)}
+\date{21-04-2024}
+
+\begin{document}
+
+\maketitle
+
+\section{Building the Flow-Network}
+Suppose that each box represents a node in our graph. Our goal is to construct a bipartite diagraph having vertex set $U \cup V$ such that each box is a vertex in both disjoint sets $U$ and $V$, and there is an edge from $u \in U$ to $v \in V$ if and only if box $u$ can be fitted inside box $v$.
+
+\noindent We can represent this network-flow digraph using an adjacency matrix. For any pair of nodes $u$ and $v$ in our graph, the adjacency matrix $\text{adj}[u][v]$ ($u, v \in \{1, 2, \dots, n\}$) is defined as follows:
+
+\[
+\text{adj}[u][v] =
+\begin{cases}
+1 & \text{if box } u \text{ can be fitted inside box } v \\
+0 & \text{otherwise}
+\end{cases}
+\]
+
+\noindent Determining whether box $u$ can be fitted inside box $v$ is straightforward. We can sort the dimensions of both boxes, which were initially denoted as $u.x$, $u.y$, $u.z$ for box $u$ and $v.x$, $v.y$, $v.z$ for box $v$, since in the problem we are given that we are allowed to rotate the boxes. Then, we iterate through each dimension and check if $u.i < v.i$ for all $i$ (where $i$ belongs to $\{x, y, z\}$). Now, in order to complete our flow network, we add source and sink vertices $s$, $t$ to the graph, such that there is an edge from $s$ to each vertex $u \in U$ and from each vertex $v \in V$ to $t$. Please note that in order to implement this, you would have to increase the size of our graph so that it contains 2 more vertices. Now,
+
+\[
+\text{adj}[s][u] =
+\begin{cases}
+1 & \text{if } u \text{ belongs to } U \\
+0 & \text{otherwise}
+\end{cases}
+\]
+
+\[
+\text{adj}[v][t] =
+\begin{cases}
+1 & \text{if } v \text{ belongs to } V \\
+0 & \text{otherwise}
+\end{cases}
+\]
+
+\noindent We assign a capacity function $c: E \rightarrow \mathbb{Z}$ and $c(e) \geq 0$. Initialize c(e) = 1 for each directed edge present in our graph and then assign an initial flow $f$ with value $|f| = 0$. Now we just need to push flow through this network using a max-flow algorithm like Ford-Fulkerson.
+
+\section{Why does maximum flow of the constructed network correspond to the answer of this problem?}
+
+We know from the applications of network flows that the maximum bipartite matching in the case of an unweighted bipartite graph equals the value of the maximum flow $|f|$ (can be directly referenced from the lecture slides). Take note that in the way we built the graph, we did not have to build an undirected graph but already achieved a directed graph. Also, the edges from the source s to vertex $u \in U$ are assigned with capactiy equal to one to enforce that one box can contain only one other box. Now, if $u$ contains $v$, select $e = (u, v)$ in our graph where $u \in U$ and $v \in V$. We know that each box can strictly contain only one other box "directly" inside it (i.e., no more than one box can be present inside one box kept side-to-side). Each time we place one box into another, the number of visible boxes gets decreased by one. Let $|M|$ be the final number of edges selected. It is maximized according to the above procedure. Otherwise, if there is a matching that has a larger size, there will be a better way to place the boxes and that cannot be done in any other way except for putting more than one boxes directly in one box, contradicting the fact that one box can directly contain only one other box. Thus, $M$ is a maximum matching, and the number of nested boxes is $|M|$. Thus, we obtain our answer by computing $n - |M|$ = $n - |f|$ i.e., the maximum flow (which we can compute using Ford Fulkerson's algorithm on our flow-network) subtracted from the total number of boxes available.
+
+\section{Time Complexity}
+
+\subsection{Building Flow-Network}
+\begin{itemize}
+    \item It takes $O(n^2)$ time to initialize the adjacency matrix.
+    \item It takes $O(1)$ time to sort the dimensions of the boxes since there is a constant number of dimensions (3).
+    \item It takes $O(n^2)$ time to make edges from vertex $u$ to vertex $v$ (the sorting done above is in $O(1)$ time) since we need to run a nested iteration to check if box $u$ can be fitted inside box $v$.
+    \item It takes $O(1)$ time to create vertices $s$ and $t$.
+    \item It takes $O(n)$ time in the worst-case to check if a vertex u belongs to $U$ or $V$, since we need to iterate through adj[u] to check if there exists a directed edge from u to any other vertex v, i.e $adj[u][v] = 1$, and if it does, then u belongs to $U$. For $V$, we need to iterate through adj[v] to check if there exists a directed edge from any vertex u to v, i.e $adj[u][v] = 1$, and if it does, then v belongs to $V$.
+    \item Thus, from the above point, it takes $O(n^2)$ time in the worst-case to assign edges from $s$ to $U$ and from $V$ to $t$.
+    \item It takes $O(n^2)$ time to assign the capacity function $c: E \rightarrow \mathbb{Z}$ and again $O(n^2)$ for assigning the initial flow value $|f| = 0$ if number of edges is in $O(n^2)$.
+    \item Thus it takes $O(n^2)$ time in the worst-case to build the flow-network.
+\end{itemize}
+
+\subsection{Applying Ford-Fulkerson's Algorithm to the Network}
+We are given that Ford-Fulkerson's algorithm runs in $O(|f|(V + E))$ time. Since the maximum possible value of $|f|$ is $n$, and if the number of edges in our graph is $O(n^2)$, the worst-case time complexity of applying Ford-Fulkerson's algorithm to our flow-network is $O(n^3)$.
+
+\subsection{Overall Worst-Case Time Complexity}
+We have seen that building the flow-network takes $O(n^2)$ time, and applying Ford-Fulkerson's algorithm to the network takes $O(n^3)$ time. Thus, the overall time complexity of our algorithm is $O(n^3)$.
+
+\end{document}
